@@ -11,21 +11,24 @@ class URDFParser:
         pass
     
     def parse(self, filename, alpha_tie_breaker = False):
-        # parse the file
-        urdf_file = open(filename, "r")
-        self.soup = BeautifulSoup(urdf_file.read(),"xml").find("robot")
-        # set up the robot object
-        self.robot = Robot(self.soup["name"])
-        # collect links
-        self.parse_links()
-        # collect joints
-        self.parse_joints()
-        # remove all fixed joints, renumber links and joints, and build parent and subtree lists
-        self.renumber_linksJoints(alpha_tie_breaker)
-        # report joint ordering to user
-        self.print_joint_order()
-        # return the robot object
-        return copy.deepcopy(self.robot)
+        try:
+            # parse the file
+            urdf_file = open(filename, "r")
+            self.soup = BeautifulSoup(urdf_file.read(),"xml").find("robot")
+            # set up the robot object
+            self.robot = Robot(self.soup["name"])
+            # collect links
+            self.parse_links()
+            # collect joints
+            self.parse_joints()
+            # remove all fixed joints, renumber links and joints, and build parent and subtree lists
+            self.renumber_linksJoints(alpha_tie_breaker)
+            # report joint ordering to user
+            self.print_joint_order()
+            # return the robot object
+            return copy.deepcopy(self.robot)
+        except:
+            return None
 
     def to_float(self, string_arr):
         try:
