@@ -13,7 +13,7 @@ alpha_tie_breaker=False # URDF ordering used
 alpha_tie_breaker=True # Joint name ordering used
 ```
 
-## Dependencies:
+## Instalation Instructions:
 There are 4 required packages ```beautifulsoup4, lxml, numpy, sympy``` which can be automatically installed by running:
 ```shell
 pip3 install -r requirements.txt
