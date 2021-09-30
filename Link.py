@@ -10,6 +10,7 @@ class Link:
         self.urdf_lid = lid     # URDF ordered ID
         self.bfs_lid = lid      # temporary ID (replaced by BFS parse ordering)
         self.bfs_level = 0      # temporary level (replaced by BFS parse ordering)
+        self.parent_id = None   # temporary ID (replaced later)
         self.origin = Origin()  # Fixed origin location
         self.mass = None
         self.inertia = None
@@ -18,11 +19,17 @@ class Link:
     def set_id(self, id_in):
         self.lid = id_in
 
+    def set_parent_id(self, id_in):
+        self.parent_id = id_in    
+
     def set_bfs_id(self, id_in):
         self.bfs_id = id_in
 
     def set_bfs_level(self, level_in):
         self.bfs_level = level_in
+
+    def set_subtree(self, subtree_in):
+        self.subtree = subtree_in
 
     def set_origin_xyz(self, x, y = None, z = None):
         self.origin.set_translation(x,y,z)
@@ -66,11 +73,17 @@ class Link:
     def get_id(self):
         return self.lid
 
+    def get_parent_id(self):
+        return self.parent_id
+
     def get_bfs_id(self):
         return self.bfs_id
 
     def get_bfs_level(self):
         return self.bfs_level
+
+    def get_subtree(self):
+        return self.subtree
 
     def is_world_base_frame(self):
         if self.mass == 0 and self.inertia.is_zero():

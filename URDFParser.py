@@ -118,28 +118,26 @@ class URDFParser:
                 self.robot.remove_link(child_link)
 
     def build_subtree_lists(self):
-        self.robot.subtree_lid_lists = {}
+        subtree_lid_lists = {}
         # initialize all subtrees to include itself
         for lid in self.robot.get_links_dict_by_id().keys():
-            self.robot.subtree_lid_lists[lid] = [lid]
+            subtree_lid_lists[lid] = [lid]
         # start at the leaves and build up!
         for curr_joint in self.robot.get_joints_ordered_by_id(reverse=True):
             parent_lid = self.robot.get_link_by_name(curr_joint.parent).get_id()
             child_lid = self.robot.get_link_by_name(curr_joint.child).get_id()
             # add the child's subtree list to the parent (includes the child)
-            if child_lid in self.robot.subtree_lid_lists.keys():
-                self.robot.subtree_lid_lists[parent_lid] = list(set(self.robot.subtree_lid_lists[parent_lid]).union(set(self.robot.subtree_lid_lists[child_lid])))
-
-    def build_parent_child_list(self):
-        self.robot.parent_lid_dict = {}
-        for curr_joint in self.robot.get_joints_ordered_by_id():
-            child = self.robot.get_link_by_name(curr_joint.child)
-            parent = self.robot.get_link_by_name(curr_joint.parent)
-            self.robot.parent_lid_dict[child.get_id()] = None if parent is None else parent.lid
+            if child_lid in subtree_lid_lists.keys():
+                subtree_lid_lists[parent_lid] = list(set(subtree_lid_lists[parent_lid]).union(set(subtree_lid_lists[child_lid])))
+        # save to the links
+        for link in self.robot.links:
+            curr_subtree = subtree_lid_lists[link.get_id()]
+            link.set_subtree(copy.deepcopy(curr_subtree))
 
     def dfs_order_update(self, parent_name, alpha_tie_breaker = False, next_lid = 0, next_jid = 0):
         while True:
             child_joints = self.robot.get_joints_by_parent_name(parent_name)
+            parent_id = self.robot.get_link_by_name(parent_name).lid
             if alpha_tie_breaker:
                 child_joints.sort(key=lambda joint: joint.name)
             for curr_joint in child_joints:
@@ -148,6 +146,7 @@ class URDFParser:
                 # save the next_lid to the child
                 child = self.robot.get_link_by_name(curr_joint.child)
                 child.set_id(next_lid)
+                child.set_parent_id(parent_id)
                 # recurse
                 next_lid, next_jid = self.dfs_order_update(child.name, alpha_tie_breaker, next_lid + 1, next_jid + 1)
             # return to parent
@@ -197,8 +196,6 @@ class URDFParser:
         self.dfs_order_update(root_link_name, alpha_tie_breaker)
         # also save a bfs parse ordering and levels of joints/links
         self.bfs_order(root_link_name)
-        # rebuild parent child list (based on standard dfs ordering)
-        self.build_parent_child_list()
         # build subtree lists
         self.build_subtree_lists()
 

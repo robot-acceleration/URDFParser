@@ -7,12 +7,12 @@ class Robot:
         self.name = name
         self.links = []
         self.joints = []
-        # Note: the following are directly accessed by URDFParser and
-        # constructed for convenience in getting parent and subtree IDs
-        # be careful when changing them. Everything else is accessed
-        # by setters and getters.
-        self.parent_lid_dict = {}
-        self.subtree_lid_lists = {}
+
+    def next_none(self, iterable):
+        try:
+            return next(iterable)
+        except:
+            return None
 
     #################
     #    Setters    #
@@ -47,7 +47,7 @@ class Robot:
         return all([jid - self.get_parent_id(jid) == 1 for jid in range(self.get_num_joints())])
 
     def get_parent_id(self, lid):
-        return self.parent_lid_dict.get(lid)
+        return self.get_link_by_id(lid).get_parent_id()
 
     def get_parent_ids(self, lids):
         return [self.get_parent_id(lid) for lid in lids]
@@ -56,13 +56,13 @@ class Robot:
         return list(set(self.get_parent_ids(lids)))
 
     def get_parent_id_array(self):
-        return [tpl[1] for tpl in sorted(self.parent_lid_dict.items(), key=lambda tpl: tpl[0])]
+        return [tpl[1] for tpl in sorted([(link.get_id(),link.get_parent_id()) for link in self.links], key=lambda tpl: tpl[0])[1:]]
 
     def has_repeated_parents(self, jids):
         return len(self.get_parent_ids(jids)) != len(self.get_unique_parent_ids(jids))
 
     def get_subtree_by_id(self, lid):
-        return sorted(self.subtree_lid_lists.get(lid))
+        return sorted(self.get_link_by_id(lid).get_subtree())
 
     def get_total_subtree_count(self):
         return sum([len(self.get_subtree_by_id(lid)) for lid in range(self.get_num_joints())])
@@ -108,16 +108,10 @@ class Robot:
         return len(self.joints)
 
     def get_joint_by_id(self, jid):
-        for joint in self.joints:
-            if joint.jid == jid:
-                return joint
-        return None
+        return self.next_none(filter(lambda fjoint: fjoint.jid == jid, self.joints))
 
     def get_joint_by_name(self, name):
-        for joint in self.joints:
-            if joint.name == name:
-                return joint
-        return None
+        return self.next_none(filter(lambda fjoint: fjoint.name == name, self.joints))
 
     def get_joints_by_bfs_level(self, level):
         return list(filter(lambda fjoint: fjoint.bfs_level == level, self.joints))
@@ -141,7 +135,7 @@ class Robot:
         return list(filter(lambda fjoint: fjoint.child == child_name, self.joints))
 
     def get_joint_by_parent_child_name(self, parent_name, child_name):
-        return next(filter(lambda fjoint: fjoint.parent == parent_name and fjoint.child == child_name, self.joints))
+        return self.next_none(filter(lambda fjoint: fjoint.parent == parent_name and fjoint.child == child_name, self.joints))
 
     ##############
     #    Link    #
@@ -155,19 +149,13 @@ class Robot:
         return get_num_links() - 1
 
     def get_link_by_id(self, lid):
-        for link in self.links:
-            if link.lid == lid:
-                return link
-        return None
+        return self.next_none(filter(lambda flink: flink.lid == lid, self.links))
 
     def get_link_by_name(self, name):
-        for link in self.links:
-            if link.name == name:
-                return link
-        return None
+        return self.next_none(filter(lambda flink: flink.name == name, self.links))
 
     def get_links_by_bfs_level(self, level):
-        return list(filter(lambda flink: flink.bfs_level == level, self.link))
+        return list(filter(lambda flink: flink.bfs_level == level, self.links))
 
     def get_links_ordered_by_id(self, reverse = False):
         return sorted(self.links, key=lambda item: item.lid, reverse = reverse)
@@ -192,7 +180,7 @@ class Robot:
         return self.get_joint_by_name(name).get_transformation_matrix()
 
     def get_Xmats_by_bfs_level(self, level):
-        return [joint.get_transformation_matrix() for joint in self.get_joints_by_bfs_level()]
+        return [joint.get_transformation_matrix() for joint in self.get_joints_by_bfs_level(level)]
 
     def get_Xmats_ordered_by_id(self, reverse = False):
         return [joint.get_transformation_matrix() for joint in self.get_joints_ordered_by_id(reverse)]
@@ -217,7 +205,7 @@ class Robot:
         return self.get_joint_by_name(name).get_transformation_matrix_function()
 
     def get_Xmat_Funcs_by_bfs_level(self, level):
-        return [joint.get_transformation_matrix_function() for joint in self.get_joints_by_bfs_level()]
+        return [joint.get_transformation_matrix_function() for joint in self.get_joints_by_bfs_level(level)]
 
     def get_Xmat_Funcs_ordered_by_id(self, reverse = False):
         return [joint.get_transformation_matrix_function() for joint in self.get_joints_ordered_by_id(reverse)]
@@ -267,7 +255,7 @@ class Robot:
         return self.get_joint_by_name(name).get_joint_subspace()
 
     def get_S_by_bfs_level(self, level):
-        return [joint.get_joint_subspace() for joint in self.get_joints_by_bfs_level()]
+        return [joint.get_joint_subspace() for joint in self.get_joints_by_bfs_level(level)]
 
     def get_Ss_ordered_by_id(self, reverse = False):
         return [joint.get_joint_subspace() for joint in self.get_joints_ordered_by_id(reverse)]
