@@ -56,6 +56,7 @@ is_serial_chain()
 #       num_vel = num_pos for fixed base (and is one larger with quaternion)
 get_num_pos()
 get_num_vel()
+get_num_cntrl()
 get_num_joints()
 get_num_links()
 get_num_links_effective() # num_links - 1 (base link is not used in many RBD algorithms when fixed)
@@ -87,6 +88,8 @@ get_joints_by_child_name(child_name)
 get_joint_by_parent_child_name(parent_name,child_name)
 # see if the following joints have the same S (useful for codegen)
 are_Ss_identical(jids)
+# get the velocity damping coefficients
+get_damping_by_id(jid)
 ```
 
 ## Joint API:

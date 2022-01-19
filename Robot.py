@@ -40,6 +40,9 @@ class Robot:
     def get_num_vel(self):
         return self.get_num_joints()
 
+    def get_num_cntrl(self):
+        return self.get_num_joints()
+
     def get_name(self):
         return self.name
 
@@ -136,6 +139,9 @@ class Robot:
 
     def get_joint_by_parent_child_name(self, parent_name, child_name):
         return self.next_none(filter(lambda fjoint: fjoint.parent == parent_name and fjoint.child == child_name, self.joints))
+
+    def get_damping_by_id(self, jid):
+        return self.get_joint_by_id(jid).get_damping()
 
     ##############
     #    Link    #
